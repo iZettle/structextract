@@ -51,6 +51,16 @@ func TestExtractor_Names(t *testing.T) {
 
 }
 
+func TestExtractor_Names_Invalid_Struct(t *testing.T) {
+	test := "test"
+	ext := New(&test)
+
+	_, err := ext.Names()
+	if err == nil {
+		t.Fatal("Passed valus is not a vlaid stract")
+	}
+
+}
 func TestExtractor_NamesFromTag(t *testing.T) {
 	ext := fakeData()
 	exp := []string{
@@ -64,6 +74,17 @@ func TestExtractor_NamesFromTag(t *testing.T) {
 	if !reflect.DeepEqual(res, exp) {
 		t.FailNow()
 	}
+}
+
+func TestExtractor_NamesFromTag_Invalid_Struct(t *testing.T) {
+	test := []string{"fail", "fail2"}
+	ext := New(&test)
+
+	_, err := ext.NamesFromTag("json")
+	if err == nil {
+		t.Fatal("Passed valus is not a vlaid stract")
+	}
+
 }
 
 func TestExtractor_Values(t *testing.T) {
@@ -81,6 +102,17 @@ func TestExtractor_Values(t *testing.T) {
 	}
 }
 
+func TestExtractor_Values_Invalid_Struct(t *testing.T) {
+	test := []string{"fail", "fail2"}
+	ext := New(&test)
+
+	_, err := ext.Values()
+	if err == nil {
+		t.Fatal("Passed valus is not a vlaid stract")
+	}
+
+}
+
 func TestExtractor_FieldValueMap(t *testing.T) {
 	ext := fakeData()
 	exp := map[string]interface{}{
@@ -95,6 +127,18 @@ func TestExtractor_FieldValueMap(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestExtractor_FieldValueMap_Invalid_Struct(t *testing.T) {
+	test := []string{"fail", "fail2"}
+	ext := New(&test)
+
+	_, err := ext.FieldValueMap()
+	if err == nil {
+		t.Fatal("Passed valus is not a vlaid stract")
+	}
+
+}
+
 func TestExtractor_FieldValueFromTagMap(t *testing.T) {
 	ext := fakeData()
 	exp := map[string]interface{}{
@@ -107,6 +151,17 @@ func TestExtractor_FieldValueFromTagMap(t *testing.T) {
 
 	if !reflect.DeepEqual(res, exp) {
 		t.FailNow()
+	}
+
+}
+
+func TestExtractor_FieldValueFromTagMap_Invalid_Struct(t *testing.T) {
+	test := []string{"fail", "fail2"}
+	ext := New(&test)
+
+	_, err := ext.FieldValueFromTagMap("json")
+	if err == nil {
+		t.Fatal("Passed valus is not a vlaid stract")
 	}
 
 }
