@@ -73,7 +73,8 @@ go get github.com/intelligentpos/structextract
 
 	
 
-	//The result will be {"Field1":"value 1","Field4":123}, all the fields that are ignored are not present.
+	//The result will be {"Field1":"value 1","Field4":123},
+	//all the fields that are ignored are not present.
 	valuesmap, _ := extract.FieldValueMap()
 	
 ```
@@ -100,7 +101,7 @@ A sample example that we use the structextract with [Squirrel](https://github.co
 		Field4: 123,
 	}        
         
- //Cretea map with all the fields a user can update
+    //Cretea map with all the fields a user can update
 	ext := structextract.New(&business).
 		IgnoreField("Field2")
 		
