@@ -12,7 +12,7 @@ go get github.com/intelligentpos/structextract
 
 #### Basic Usage
 ```go
-type SampleStruct struct {
+   type SampleStruct struct {
 		Field1 string `json:"field1" db:"field_1_db"`
 		Field2 string `json:"field2" db:"field_2_db"`
 		Field3 bool   `json:"field3" db:"field_3_db"`
@@ -31,29 +31,34 @@ type SampleStruct struct {
 	extract := New(&ss)
 	
 
-	//Values will return the values of every field: ["value 1", "value 2", true, 123]
+	//Values will return the values of every field: 
+	//["value 1", "value 2", true, 123]
 	values, _ := extract.Values()
 	
 
-	//Names will return an array of the field names: ["Field1","Field2","Field3","Field4"]
+	//Names will return an array of the field names: 
+	//["Field1","Field2","Field3","Field4"]
 	names, _ := extract.Names()
 	
 
-	//NamesFromTag will return an array of the tag value for the given tag: ["field_1_db","field_2_db","field_3_db"]
+	//NamesFromTag will return an array of the tag value for the given tag: 
+	//["field_1_db","field_2_db","field_3_db"]
 	tagnames, _ := extract.NamesFromTag("db")
 	
 
-	//FieldValueMap will return a map field -> value: {"Field1":"value 1","Field2":"value 2","Field3":true,"Field4":123}
+	//FieldValueMap will return a map field -> value: 
+	//{"Field1":"value 1","Field2":"value 2","Field3":true,"Field4":123}
 	valuesmap, _ := extract.FieldValueMap()
 	
 
-	//FieldValueFromTagMap will return a map of tag value -> value: {"field1":"value 1","field2":"value 2","field3":true,"field4":123}
+	//FieldValueFromTagMap will return a map of tag value -> value: 
+	//{"field1":"value 1","field2":"value 2","field3":true,"field4":123}
 	tagmap, _ := extract.FieldValueFromTagMap("json")
 	
 ```
 #### Ignore Fields
 ```go
- ss := SampleStruct{
+    ss := SampleStruct{
 		Field1: "value 1",
 		Field2: "value 2",
 		Field3: true,
@@ -80,7 +85,7 @@ We found that is very convenient to use structextract when we want to make sql r
 A sample example that we use the structextract with [Squirrel](https://github.com/Masterminds/squirrel).
 
 ```go
-type SampleStruct struct {
+   type SampleStruct struct {
 		Field1 string `json:"field1" db:"field_1_db"`
 		Field2 string `json:"field2" db:"field_2_db"`
 		Field3 bool   `json:"field3" db:"field_3_db"`
