@@ -12,7 +12,7 @@ go get github.com/intelligentpos/structextract
 
 #### Basic Usage
 ```go
-   type SampleStruct struct {
+       type SampleStruct struct {
 		Field1 string `json:"field1" db:"field_1_db"`
 		Field2 string `json:"field2" db:"field_2_db"`
 		Field3 bool   `json:"field3" db:"field_3_db"`
@@ -58,7 +58,7 @@ go get github.com/intelligentpos/structextract
 ```
 #### Ignore Fields
 ```go
-    ss := SampleStruct{
+       ss := SampleStruct{
 		Field1: "value 1",
 		Field2: "value 2",
 		Field3: true,
@@ -86,7 +86,7 @@ or maps with data to update or create.
 A sample example that we use the structextract with [Squirrel](https://github.com/Masterminds/squirrel).
 
 ```go
-   type SampleStruct struct {
+       type SampleStruct struct {
 		Field1 string `json:"field1" db:"field_1_db"`
 		Field2 string `json:"field2" db:"field_2_db"`
 		Field3 bool   `json:"field3" db:"field_3_db"`
@@ -101,7 +101,7 @@ A sample example that we use the structextract with [Squirrel](https://github.co
 		Field4: 123,
 	}        
         
-    //Create a map with all the fields a user can update 
+        //Create a map with all the fields a user can update 
 	ext := structextract.New(&ss).
 		IgnoreField("Field2")
 		
