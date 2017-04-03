@@ -8,7 +8,7 @@ import (
 // Extractor holds the struct that we wont to extract data from
 type Extractor struct {
 	StructAddr    interface{} // StructAddr: struct address
-	ignoredFields []string    //ignoredFields: an array with all the fields to be ignored
+	ignoredFields []string    // ignoredFields: an array with all the fields to be ignored
 }
 
 // New returns a new Extractor struct
