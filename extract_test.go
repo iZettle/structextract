@@ -57,7 +57,7 @@ func TestExtractor_Names_Invalid_Struct(t *testing.T) {
 
 	_, err := ext.Names()
 	if err == nil {
-		t.Fatal("Passed value is not a valid stract")
+		t.Fatal("Passed value is not a valid struct")
 	}
 
 }
@@ -82,7 +82,7 @@ func TestExtractor_NamesFromTag_Invalid_Struct(t *testing.T) {
 
 	_, err := ext.NamesFromTag("json")
 	if err == nil {
-		t.Fatal("Passed value is not a valid stract")
+		t.Fatal("Passed value is not a valid struct")
 	}
 
 }
@@ -108,7 +108,7 @@ func TestExtractor_Values_Invalid_Struct(t *testing.T) {
 
 	_, err := ext.Values()
 	if err == nil {
-		t.Fatal("Passed value is not a valid stract")
+		t.Fatal("Passed value is not a valid struct")
 	}
 
 }
@@ -134,7 +134,7 @@ func TestExtractor_FieldValueMap_Invalid_Struct(t *testing.T) {
 
 	_, err := ext.FieldValueMap()
 	if err == nil {
-		t.Fatal("Passed value is not a valid stract")
+		t.Fatal("Passed value is not a valid struct")
 	}
 
 }
@@ -161,7 +161,7 @@ func TestExtractor_FieldValueFromTagMap_Invalid_Struct(t *testing.T) {
 
 	_, err := ext.FieldValueFromTagMap("json")
 	if err == nil {
-		t.Fatal("Passed value is not a valid stract")
+		t.Fatal("Passed value is not a valid struct")
 	}
 
 }
