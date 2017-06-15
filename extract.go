@@ -167,11 +167,11 @@ func (e *Extractor) isValidStruct() error {
 
 	stVal := reflect.ValueOf(e.StructAddr)
 	if stVal.Kind() != reflect.Ptr || stVal.IsNil() {
-		return errors.New("struct passed is not valid")
+		return errors.New("struct passed is not valid, a pointer was expected")
 	}
 	structVal := stVal.Elem()
 	if structVal.Kind() != reflect.Struct {
-		return errors.New("struct passed is not valid")
+		return errors.New("struct passed is not valid, a pointer to struct was expected")
 	}
 
 	return nil

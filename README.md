@@ -1,3 +1,5 @@
+[![Coverage Status](https://coveralls.io/repos/github/intelligentpos/structextract/badge.svg)](https://coveralls.io/github/intelligentpos/structextract)
+
 # structextract
 A very small package that extracts a given struct to an array or to a map.
 There is option to ignore fields or to use the tag names as key on the struct.
