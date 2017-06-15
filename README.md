@@ -29,7 +29,7 @@ go get github.com/intelligentpos/structextract
 		Field4: 123,
 	}
 	
-
+    // Create a new extractor,we have to pass a pointer to a struct
 	extract := New(&ss)
 	
 
