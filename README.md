@@ -70,8 +70,7 @@ go get github.com/intelligentpos/structextract
 
 	// Set all the struct fields that we need to ignore
 	extract := New(&ss).
-		IgnoreField("Field2").
-		IgnoreField("Field3")
+		IgnoreField("Field2","Field3")
 
 	
 	//The result will be {"Field1":"value 1","Field4":123},
