@@ -1,4 +1,6 @@
-[![Coverage Status](https://coveralls.io/repos/github/intelligentpos/structextract/badge.svg)](https://coveralls.io/github/intelligentpos/structextract)
+[![Coverage Status](https://coveralls.io/repos/github/intelligentpos/structextract/badge.svg?branch=master&t=461ETo)](https://coveralls.io/github/intelligentpos/structextract?branch=master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/intelligentpos/structextract)](https://goreportcard.com/report/github.com/intelligentpos/structextract)
+[![GoDoc](https://godoc.org/github.com/intelligentpos/structextract?status.svg)](https://godoc.org/github.com/intelligentpos/structextract)
 
 # structextract
 A very small package that extracts a given struct to an array or to a map.
