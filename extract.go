@@ -5,13 +5,14 @@ import (
 	"reflect"
 )
 
-// Extractor holds the struct that we wont to extract data from
+// Extractor holds the struct that we want to extract data from
 type Extractor struct {
 	StructAddr    interface{} // StructAddr: struct address
 	ignoredFields []string    // ignoredFields: an array with all the fields to be ignored
 }
 
 // New returns a new Extractor struct
+// the parameter have to be a pointer to a struct
 func New(s interface{}) *Extractor {
 	return &Extractor{
 		StructAddr:    s,
@@ -123,19 +124,18 @@ func (e *Extractor) FieldValueFromTagMap(tag string) (out map[string]interface{}
 	return
 }
 
-//IgnoreField if the given field is valid based on the given struct,
-//	      then append it on the ignore list
-//            e.g. ext := structextract.New(&business).
-//			IgnoreField("ID").
-//			IgnoreField("DateModified")
-func (e *Extractor) IgnoreField(fd string) *Extractor {
+// IgnoreField checks if the given fields are valid based on the given struct,
+// then append them on the ignore list
+// e.g. ext := structextract.New(&business).IgnoreField("ID","DateModified")
+func (e *Extractor) IgnoreField(fd ...string) *Extractor {
 
 	if err := e.isValidStruct(); err != nil {
 		return e
 	}
-
-	if e.isFieldNameValid(fd) {
-		e.ignoredFields = append(e.ignoredFields, fd)
+	for _, field := range fd {
+		if e.isFieldNameValid(field) {
+			e.ignoredFields = append(e.ignoredFields, field)
+		}
 	}
 
 	return e
@@ -167,11 +167,11 @@ func (e *Extractor) isValidStruct() error {
 
 	stVal := reflect.ValueOf(e.StructAddr)
 	if stVal.Kind() != reflect.Ptr || stVal.IsNil() {
-		return errors.New("struct passed is not valid")
+		return errors.New("struct passed is not valid, a pointer was expected")
 	}
 	structVal := stVal.Elem()
 	if structVal.Kind() != reflect.Struct {
-		return errors.New("struct passed is not valid")
+		return errors.New("struct passed is not valid, a pointer to struct was expected")
 	}
 
 	return nil

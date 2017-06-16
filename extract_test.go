@@ -30,8 +30,7 @@ func fakeIgnoredData() *Extractor {
 		Field4: "2016-10-10",
 	}
 	ext := New(&ts).
-		IgnoreField("Field2").
-		IgnoreField("Field4")
+		IgnoreField("Field2", "Field4")
 	return ext
 }
 func TestExtractor_Names(t *testing.T) {
@@ -239,4 +238,29 @@ func TestExtractor_FieldValueFromTagMapWrongTag(t *testing.T) {
 		t.FailNow()
 	}
 
+}
+
+func TestExtractor_IgnoreField_NotValidStruct(t *testing.T) {
+
+	notAStruct := []string{"test", "test2"}
+	ext := New(notAStruct).IgnoreField("test")
+
+	if ext.ignoredFields != nil {
+		t.Fatalf("not valid struct error was expected")
+	}
+}
+
+func TestExtractor_IgnoreField_NotValidField(t *testing.T) {
+	fk := fakeData()
+	fk.IgnoreField("NotAValidField")
+	exp := []interface{}{
+		"hello",
+		"world",
+		true,
+		"2016-10-10",
+	}
+	res, _ := fk.Values()
+	if !reflect.DeepEqual(res, exp) {
+		t.Fatalf("unexpected struct")
+	}
 }

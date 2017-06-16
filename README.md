@@ -1,3 +1,5 @@
+[![Coverage Status](https://coveralls.io/repos/github/intelligentpos/structextract/badge.svg)](https://coveralls.io/github/intelligentpos/structextract)
+
 # structextract
 A very small package that extracts a given struct to an array or to a map.
 There is option to ignore fields or to use the tag names as key on the struct.
@@ -27,7 +29,7 @@ go get github.com/intelligentpos/structextract
 		Field4: 123,
 	}
 	
-
+    // Create a new extractor,we have to pass a pointer to a struct
 	extract := New(&ss)
 	
 
@@ -68,8 +70,7 @@ go get github.com/intelligentpos/structextract
 
 	// Set all the struct fields that we need to ignore
 	extract := New(&ss).
-		IgnoreField("Field2").
-		IgnoreField("Field3")
+		IgnoreField("Field2","Field3")
 
 	
 	//The result will be {"Field1":"value 1","Field4":123},
