@@ -59,6 +59,31 @@ func (e *Extractor) NamesFromTag(tag string) (out []string, err error) {
 	return
 }
 
+//NamesFromTagWithPrefix returns an array with all the tag names for each field including the given prefix
+func (e *Extractor) NamesFromTagWithPrefix(tag string, prefix string) (out []string, err error) {
+
+	if err := e.isValidStruct(); err != nil {
+		return nil, err
+	}
+
+	s := reflect.ValueOf(e.StructAddr).Elem()
+
+	for i := 0; i < s.NumField(); i++ {
+		if isIgnored(s.Type().Field(i).Name, e.ignoredFields) {
+			continue
+		}
+		if val, ok := s.Type().Field(i).Tag.Lookup(tag); ok {
+			if prefix != "" {
+				out = append(out, prefix+val)
+				continue
+			}
+			out = append(out, val)
+		}
+	}
+
+	return
+}
+
 //Values returns an interface array with all the values
 func (e *Extractor) Values() (out []interface{}, err error) {
 

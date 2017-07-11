@@ -2,6 +2,7 @@ package structextract
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -86,6 +87,45 @@ func TestExtractor_NamesFromTag_Invalid_Struct(t *testing.T) {
 
 }
 
+func TestExtractor_NamesFromTagWithPrefix(t *testing.T) {
+	ext := fakeData()
+	prefix := "default_"
+	res, err := ext.NamesFromTagWithPrefix("json", prefix)
+	if err != nil {
+		t.Fatalf("unexpected error")
+	}
+
+	if !strings.Contains(res[1], prefix) {
+		t.Fatalf("prefix was not applied")
+	}
+
+}
+func TestExtractor_NamesFromTagWithPrefix_No_Prefix(t *testing.T) {
+	ext := fakeData()
+	resWith, err := ext.NamesFromTagWithPrefix("json", "")
+	if err != nil {
+		t.Fatalf("unexpected error")
+	}
+	resWithOut, err := ext.NamesFromTag("json")
+	if err != nil {
+		t.Fatalf("unexpected error")
+	}
+
+	if !reflect.DeepEqual(resWith, resWithOut) {
+		t.Fatalf("slices micmatch")
+	}
+
+}
+
+func TestExtractor_NamesFromTagWithPrefix_InvalidStruct(t *testing.T) {
+	test := []string{"fail", "fail2"}
+	ext := New(&test)
+
+	_, err := ext.NamesFromTagWithPrefix("json", "default-")
+	if err == nil {
+		t.Fatal("Passed value is not a valid struct")
+	}
+}
 func TestExtractor_Values(t *testing.T) {
 	ext := fakeData()
 	exp := []interface{}{
@@ -238,6 +278,18 @@ func TestExtractor_GetFieldNamesFromTagIgnore(t *testing.T) {
 		"field_3",
 	}
 	res, _ := ext.NamesFromTag("json")
+
+	if !reflect.DeepEqual(res, exp) {
+		t.FailNow()
+	}
+}
+func TestExtractor_GetFieldNamesFromTagWithPrefixIgnore(t *testing.T) {
+	ext := fakeIgnoredData()
+	exp := []string{
+		"default_field_1",
+		"default_field_3",
+	}
+	res, _ := ext.NamesFromTagWithPrefix("json", "default_")
 
 	if !reflect.DeepEqual(res, exp) {
 		t.FailNow()
