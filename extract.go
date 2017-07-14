@@ -3,6 +3,7 @@ package structextract
 import (
 	"errors"
 	"reflect"
+	"strings"
 )
 
 // Extractor holds the struct that we want to extract data from
@@ -72,13 +73,11 @@ func (e *Extractor) NamesFromTagWithPrefix(tag string, prefix string) (out []str
 		if isIgnored(s.Type().Field(i).Name, e.ignoredFields) {
 			continue
 		}
-		if val, ok := s.Type().Field(i).Tag.Lookup(tag); ok {
-			if prefix != "" {
-				out = append(out, prefix+val)
-				continue
-			}
-			out = append(out, val)
+		val, ok := s.Type().Field(i).Tag.Lookup(tag)
+		if !ok {
+			continue
 		}
+		out = append(out, strings.TrimSpace(prefix+val))
 	}
 
 	return
