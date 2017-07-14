@@ -100,6 +100,20 @@ func TestExtractor_NamesFromTagWithPrefix(t *testing.T) {
 	}
 
 }
+
+func TestExtractor_NamesFromTagWithPrefix_Empty_Tag(t *testing.T) {
+
+	ext := fakeData()
+	prefix := "default_"
+	out, err := ext.NamesFromTagWithPrefix("", prefix)
+	if err != nil {
+		t.Fatalf("error should be null")
+	}
+	if len(out) != 0 {
+		t.Fatalf("no objects was expected")
+	}
+
+}
 func TestExtractor_NamesFromTagWithPrefix_No_Prefix(t *testing.T) {
 	ext := fakeData()
 	resWith, err := ext.NamesFromTagWithPrefix("json", "")
