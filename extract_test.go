@@ -113,7 +113,7 @@ func TestExtractor_Values_Invalid_Struct(t *testing.T) {
 }
 
 func TestExtractor_ValuesFromTag(t *testing.T) {
-	ext := fakeData()
+	ext := fakeData().IgnoreField("Field4")
 	exp := []interface{}{
 		"hello",
 		"world",
@@ -127,6 +127,16 @@ func TestExtractor_ValuesFromTag(t *testing.T) {
 
 	if !reflect.DeepEqual(res, exp) {
 		t.FailNow()
+	}
+}
+
+func TestExtractor_ValuesFromTag_Invalid_Struct(t *testing.T) {
+	test := []string{"fail", "fail2"}
+	ext := New(&test)
+
+	_, err := ext.ValuesFromTag("json")
+	if err == nil {
+		t.Fatal("Passed value is not a valid struct")
 	}
 }
 

@@ -48,7 +48,12 @@ go get github.com/intelligentpos/structextract
 	//NamesFromTag will return an array of the tag value for the given tag, map[string]interface{}
 	//["field_1_db","field_2_db","field_3_db"]
 	tagnames, _ := extract.NamesFromTag("db")
-	
+
+
+    //ValuesFromTag will return an array of the values of the fields with the give tag
+    //["value 1", "value 2", true]
+    valuesFromTag, _ := extract.ValuesFromTag("db")
+
 
 	//FieldValueMap will return a map of field name to value, map[string]interface{}
 	//{"Field1":"value 1","Field2":"value 2","Field3":true,"Field4":123}
