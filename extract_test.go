@@ -6,8 +6,8 @@ import (
 )
 
 type testStruct struct {
-	Field1 string      `json:"field_1"`
-	Field2 string      `json:"field_2"`
+	Field1 string      `json:"field_1" db:"field1"`
+	Field2 string      `json:"field_2" db:"field2"`
 	Field3 bool        `json:"field_3"`
 	Field4 interface{} `json:"field_4"`
 }
@@ -110,6 +110,34 @@ func TestExtractor_Values_Invalid_Struct(t *testing.T) {
 		t.Fatal("Passed value is not a valid struct")
 	}
 
+}
+
+func TestExtractor_ValuesFromTag(t *testing.T) {
+	ext := fakeData().IgnoreField("Field4")
+	exp := []interface{}{
+		"hello",
+		"world",
+	}
+	res, _ := ext.ValuesFromTag("db")
+
+	expectedLength := len(exp)
+	if len(res) != expectedLength {
+		t.Fatalf("Number of values do not match: expected:%d, got:%d", expectedLength, len(res))
+	}
+
+	if !reflect.DeepEqual(res, exp) {
+		t.FailNow()
+	}
+}
+
+func TestExtractor_ValuesFromTag_Invalid_Struct(t *testing.T) {
+	test := []string{"fail", "fail2"}
+	ext := New(&test)
+
+	_, err := ext.ValuesFromTag("json")
+	if err == nil {
+		t.Fatal("Passed value is not a valid struct")
+	}
 }
 
 func TestExtractor_FieldValueMap(t *testing.T) {

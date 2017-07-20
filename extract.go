@@ -78,6 +78,27 @@ func (e *Extractor) Values() (out []interface{}, err error) {
 	return
 }
 
+//ValuesFromTag returns an interface array with all the values of fields with the given tag
+func (e *Extractor) ValuesFromTag(tag string) (out []interface{}, err error) {
+
+	if err := e.isValidStruct(); err != nil {
+		return nil, err
+	}
+
+	s := reflect.ValueOf(e.StructAddr).Elem()
+	for i := 0; i < s.NumField(); i++ {
+		if isIgnored(s.Type().Field(i).Name, e.ignoredFields) {
+			continue
+		}
+		if _, ok := s.Type().Field(i).Tag.Lookup(tag); ok {
+			out = append(out, s.Field(i).Interface())
+		}
+
+	}
+
+	return
+}
+
 // FieldValueMap returns a string to interface map,
 // key: field as defined on the struct
 // value: the value of the field
