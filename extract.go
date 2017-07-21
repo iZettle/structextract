@@ -3,6 +3,7 @@ package structextract
 import (
 	"errors"
 	"reflect"
+	"strings"
 )
 
 // Extractor holds the struct that we want to extract data from
@@ -54,6 +55,29 @@ func (e *Extractor) NamesFromTag(tag string) (out []string, err error) {
 		if val, ok := s.Type().Field(i).Tag.Lookup(tag); ok {
 			out = append(out, val)
 		}
+	}
+
+	return
+}
+
+//NamesFromTagWithPrefix returns an array with all the tag names for each field including the given prefix
+func (e *Extractor) NamesFromTagWithPrefix(tag string, prefix string) (out []string, err error) {
+
+	if err := e.isValidStruct(); err != nil {
+		return nil, err
+	}
+
+	s := reflect.ValueOf(e.StructAddr).Elem()
+
+	for i := 0; i < s.NumField(); i++ {
+		if isIgnored(s.Type().Field(i).Name, e.ignoredFields) {
+			continue
+		}
+		val, ok := s.Type().Field(i).Tag.Lookup(tag)
+		if !ok {
+			continue
+		}
+		out = append(out, strings.TrimSpace(prefix+val))
 	}
 
 	return
