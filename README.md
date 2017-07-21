@@ -31,7 +31,7 @@ go get github.com/intelligentpos/structextract
 		Field4: 123,
 	}
 	
-    // Create a new extractor,we have to pass a pointer to a struct
+    //Create a new extractor,we have to pass a pointer to a struct
 	extract := New(&ss)
 	
 
@@ -48,6 +48,7 @@ go get github.com/intelligentpos/structextract
 	//NamesFromTag will return an array of the tag value for the given tag, []string
 	//["field_1_db","field_2_db","field_3_db"]
 	tagnames, _ := extract.NamesFromTag("db")
+
 
     //ValuesFromTag will return an array of the values of the fields with the give tag
     //["value 1", "value 2", true]
