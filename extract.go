@@ -169,6 +169,32 @@ func (e *Extractor) FieldValueFromTagMap(tag string) (out map[string]interface{}
 	return
 }
 
+// TagMapping returns a map that maps tagged fields from one tag to another.
+// This can help with mapping partial JSON objects to some other kind of a
+// mapping, such as SQL. It only maps existing field pairs, if either field
+// does not have a tag, it's left out.
+func (e *Extractor) TagMapping(from, to string) (out map[string]string, err error) {
+	if err := e.isValidStruct(); err != nil {
+		return nil, err
+	}
+
+	out = make(map[string]string)
+	s := reflect.ValueOf(e.StructAddr).Elem()
+	for i := 0; i < s.NumField(); i++ {
+		if isIgnored(s.Type().Field(i).Name, e.ignoredFields) {
+			continue
+		}
+
+		fromTag, fromOk := s.Type().Field(i).Tag.Lookup(from)
+		toTag, toOk := s.Type().Field(i).Tag.Lookup(to)
+		if toOk && fromOk {
+			out[fromTag] = toTag
+		}
+	}
+
+	return
+}
+
 // IgnoreField checks if the given fields are valid based on the given struct,
 // then append them on the ignore list
 // e.g. ext := structextract.New(&business).IgnoreField("ID","DateModified")
