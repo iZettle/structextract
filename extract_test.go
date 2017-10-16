@@ -358,3 +358,78 @@ func TestExtractor_IgnoreField_NotValidField(t *testing.T) {
 		t.Fatalf("unexpected struct")
 	}
 }
+
+func TestTagMapping(t *testing.T) {
+	type test struct {
+		FieldA string `json:"fieldA" sql:"field_a"`
+		FieldB string `json:"fieldB" sql:"field_b"`
+		FieldC string `sql:"field_c"`
+		FieldD string `json:"fieldD"`
+	}
+
+	ext := New(&test{})
+	expected := map[string]string{
+		"fieldA": "field_a",
+		"fieldB": "field_b",
+	}
+
+	mapping, err := ext.TagMapping("json", "sql")
+	if err != nil {
+		t.Fatalf("encountered error (%s) whilst mapping tagged fields", err)
+	}
+
+	for k, v := range expected {
+		value, ok := mapping[k]
+		if !ok {
+			t.Errorf("mapping for key %s not found", k)
+			continue
+		}
+		if value != v {
+			t.Errorf("expected mapping mapping to be %s -> %s, got %s -> %s", k, v, k, value)
+		}
+	}
+
+}
+
+func TestTagMapping_ignoredFields(t *testing.T) {
+	type test struct {
+		FieldA string `json:"fieldA" sql:"field_a"`
+		FieldB string `json:"fieldB" sql:"field_b"`
+		FieldC string `sql:"field_c"`
+		FieldD string `json:"fieldD"`
+	}
+
+	ext := New(&test{}).IgnoreField("FieldA")
+	expected := map[string]string{
+		"fieldB": "field_b",
+	}
+
+	mapping, err := ext.TagMapping("json", "sql")
+	if err != nil {
+		t.Fatalf("encountered error (%s) whilst mapping tagged fields", err)
+	}
+
+	for k, v := range expected {
+		value, ok := mapping[k]
+		if !ok {
+			t.Errorf("mapping for key %s not found", k)
+			continue
+		}
+		if value != v {
+			t.Errorf("expected mapping mapping to be %s -> %s, got %s -> %s", k, v, k, value)
+		}
+	}
+
+}
+
+func TestTagMapping_invalidStruct(t *testing.T) {
+	type test struct {
+		Field string
+	}
+
+	ext := New(test{})
+	_, err := ext.TagMapping("json", "sql")
+	if err == nil {
+		t.Fatal("Passed value is not a valid struct")
+	}
+}

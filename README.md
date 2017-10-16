@@ -69,6 +69,11 @@ go get github.com/intelligentpos/structextract
 	//FieldValueFromTagMap will return a map of tag value to value, map[string]interface{}
 	//{"field1":"value 1","field2":"value 2","field3":true,"field4":123}
 	tagmap, _ := extract.FieldValueFromTagMap("json")
+
+        // Mapping between different tags
+	//{"field1":"field_1_db","field2":"field_2_db","field3":"field_3_db"}
+        mapping, _ := extract.TagMapping("json", "db")
+
 	
 ```
 #### Ignore Fields
