@@ -13,7 +13,7 @@ install:
 script:
   - go test -v -covermode=count -coverprofile=coverage.out
   - go vet -v ./...
-  - golint
+  - golint -set_exit_status $(glide novendor)
   
 after_script:
   - goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN
