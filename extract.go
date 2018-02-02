@@ -1,6 +1,7 @@
 package structextract
 
 import (
+	"encoding/json"
 	"errors"
 	"reflect"
 	"strings"
@@ -205,6 +206,111 @@ func (e *Extractor) IgnoreField(fd ...string) *Extractor {
 func (e *Extractor) UseEmbeddedStructs(use bool) *Extractor {
 	e.useEmbeddedStructs = use
 	return e
+}
+
+// GetChangesetForTag takes a dataset and tries to change the keys from one
+// tag to another. This is helpful when trying to create partial updates to a
+// row in a database.
+func (e *Extractor) GetChangesetForTag(data map[string]interface{}, inputTag, outputTag string) (out map[string]interface{}, err error) {
+	if err = e.isValidStruct(); err != nil {
+		return
+	}
+
+	out = make(map[string]interface{})
+	s := reflect.ValueOf(e.StructAddr).Elem()
+	fields := e.fields(s)
+	for _, field := range fields {
+
+		inputFieldTag, ok := field.tags.Lookup(inputTag)
+		if !ok {
+			continue
+		}
+		outputFieldTag, ok := field.tags.Lookup(outputTag)
+		if !ok {
+			continue
+		}
+		value, ok := data[inputFieldTag]
+		if !ok {
+			continue
+		}
+		out[outputFieldTag] = value
+	}
+
+	return
+}
+
+// ApplyChanges takes a map of arbitrary values and tries to apply them to a struct.
+func (e *Extractor) ApplyChanges(data map[string]interface{}, inputTag string) (interface{}, error) {
+	err := e.isValidStruct()
+	if err != nil {
+		return nil, err
+	}
+
+	validFields := map[string]bool{}
+	s := reflect.ValueOf(e.StructAddr).Elem()
+	fields := e.fields(s)
+	for _, field := range fields {
+
+		var inputFieldTag string
+		var ok bool
+		if inputTag == "" {
+			inputFieldTag = field.name
+		} else {
+			inputFieldTag, ok = field.tags.Lookup(inputTag)
+			if !ok {
+				continue
+			}
+		}
+
+		_, ok = data[inputFieldTag]
+		if !ok {
+			continue
+		}
+
+		fieldName := field.name
+		validFields[fieldName] = true
+
+	}
+
+	// Create a new zero value of the type stored in e.StructAddr
+	out := reflect.New(s.Type()).Interface()
+	bytes, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+
+	// dirty hax, as some fields may be deserialized differently depending
+	// on whether they're being deserialized into a map[string]interface{}
+	// or a user specified type.
+	err = json.Unmarshal(bytes, out)
+	if err != nil {
+		return nil, err
+	}
+
+	outRef := reflect.ValueOf(out).Elem()
+	partiallyApply(s, outRef, validFields)
+
+	return out, nil
+}
+
+// This function applies field values from a to b if the field name is not in
+// the ignored fields.
+// It is expected that both a and b are of the same type, othwerise panics will ensue
+func partiallyApply(a, b reflect.Value, ignoredFields map[string]bool) {
+	for i := 0; i < a.NumField(); i++ {
+		if a.Type().Field(i).Anonymous {
+			partiallyApply(a.Field(i), b.Field(i), ignoredFields)
+			continue
+		}
+		fieldName := a.Type().Field(i).Name
+		ok := ignoredFields[fieldName]
+		// check if field is already set because it was in data
+		if ok {
+			continue
+		}
+
+		b.Field(i).Set(a.Field(i))
+	}
 }
 
 func (e *Extractor) isFieldNameValid(fn string) bool {
