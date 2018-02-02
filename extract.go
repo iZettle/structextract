@@ -239,8 +239,10 @@ func (e *Extractor) GetChangesetForTag(data map[string]interface{}, inputTag, ou
 	return
 }
 
-// ApplyChanges takes a map of arbitrary values and tries to apply them to a struct.
-func (e *Extractor) ApplyChanges(data map[string]interface{}, inputTag string) (interface{}, error) {
+// ApplyMap takes a map of arbitrary values and tries to apply them to a
+// struct, matching keys with the given input tag. If the input tag is empty,
+// the key will be matched against the field name
+func (e *Extractor) ApplyMap(data map[string]interface{}, inputTag string) (interface{}, error) {
 	err := e.isValidStruct()
 	if err != nil {
 		return nil, err
