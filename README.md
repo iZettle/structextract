@@ -159,3 +159,60 @@ A sample example that we use the structextract with [Squirrel](https://github.co
   }
 ```
 
+
+#### Changesets and partial updates
+Implementing idiomatic PATCH routes in Go is not particularly simple. But with
+structextract, one can take a `map[string]interface{}` and apply it to an
+existing user defined struct. 
+
+```go
+	type Sample struct {
+		Name string `json:"name"`
+		Age  int    `json:"age" db:"date_of_birth"`
+	}
+
+	updateMap := map[string]interface{}{
+		"age": 4,
+	}
+
+	s := Sample{
+		"John",
+		3,
+	}
+
+	se := structextract.New(&s)
+
+	updatedStruct, _ := se.ApplyMap(updateMap)
+
+	fmt.Printf("new age - %d", updatedStruct.Age)
+
+```
+
+Likewise, the same struct can be remapped to be applied as a changeset to a row
+in SQL.
+
+```go
+	type Sample struct {
+		Name string `json:"name"`
+		Age  int    `json:"age" db:"date_of_birth"`
+	}
+
+	updateMap := map[string]interface{}{
+		"age": 4,
+    "garbage": "data",
+	}
+
+	s := Sample{
+		"John",
+		3,
+	}
+
+	se := structextract.New(&s)
+
+  // GetChangesetForTag will remove invalid key value pairs
+  // and change the keys to the specified one in the tag.
+  // If no tag is specified, the keys will be the field names.
+	sqlMap, err := se.GetChangesetForTag(updateMap, "json", "db")
+
+  fmt.Printf("%v", sqlMap)
+```
