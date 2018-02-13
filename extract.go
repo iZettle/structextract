@@ -239,10 +239,10 @@ func (e *Extractor) GetChangesetForTag(data map[string]interface{}, inputTag, ou
 	return
 }
 
-// ApplyMap takes a map of arbitrary values and tries to apply them to a
-// struct, matching keys with the given input tag. If the input tag is empty,
-// the key will be matched against the field name
-func (e *Extractor) ApplyMap(data map[string]interface{}, inputTag string) (interface{}, error) {
+// ApplyJSONMap a map of arbitrary values and json tags as keys and tries
+// to apply them to a struct. This function is not mutative, the original struct will remain unchanged
+// but a new struct of the same type with the changes applied to it will be returned.
+func (e *Extractor) ApplyJSONMap(data map[string]interface{}) (interface{}, error) {
 	err := e.isValidStruct()
 	if err != nil {
 		return nil, err
@@ -253,15 +253,9 @@ func (e *Extractor) ApplyMap(data map[string]interface{}, inputTag string) (inte
 	fields := e.fields(s)
 	for _, field := range fields {
 
-		var inputFieldTag string
-		var ok bool
-		if inputTag == "" {
-			inputFieldTag = field.name
-		} else {
-			inputFieldTag, ok = field.tags.Lookup(inputTag)
-			if !ok {
-				continue
-			}
+		inputFieldTag, ok := field.tags.Lookup("json")
+		if !ok {
+			continue
 		}
 
 		_, ok = data[inputFieldTag]
