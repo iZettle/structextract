@@ -468,3 +468,178 @@ func TestEmbeddedStructs_togglingBehaviour(t *testing.T) {
 		t.Fatalf("expected to get 2 values when using embedded struct")
 	}
 }
+
+type TestPartialUpgrade struct {
+	Name  string `json:"name"`
+	Age   int    `json:"age"`
+	Score int    `json:"score"`
+}
+
+func TestPartialUpdate(t *testing.T) {
+
+	existing := TestPartialUpgrade{
+		"Alistair", 3, 13,
+	}
+
+	update := map[string]interface{}{
+		"age":             4,
+		"unrelated_value": "some value",
+		"name":            "Boris",
+	}
+
+	ext := New(&existing).IgnoreField("Name")
+
+	maybeUpdated, err := ext.ApplyJSONMap(update)
+	if err != nil {
+		t.Fatalf("failed to apply changes: %s", err)
+	}
+
+	updated, ok := maybeUpdated.(*TestPartialUpgrade)
+	if !ok {
+		t.Fatalf("couldn't cast returned value to 'test'")
+	}
+
+	if updated.Age != 4 {
+		t.Fatalf("expected age to be 4, got %d", updated.Age)
+	}
+
+	if updated.Name != "Alistair" {
+		t.Fatalf("expected name to be Alistair, got %s", updated.Name)
+	}
+}
+
+type TestEmbedded struct {
+	TestPartialUpgrade
+	ID           string `json:"id"`
+	NonJSONField string
+}
+
+func TestEmbeddedPartialUpdate(t *testing.T) {
+	existing := TestEmbedded{
+		TestPartialUpgrade{
+			"Alistair", 3, 13,
+		},
+		"some id",
+		"non-json field",
+	}
+
+	update := map[string]interface{}{
+		"age":            4,
+		"name":           "Boris",
+		"UnrelatedField": "some value",
+	}
+
+	ext := New(&existing).UseEmbeddedStructs(true)
+
+	maybeUpdated, err := ext.ApplyJSONMap(update)
+	if err != nil {
+		t.Fatalf("failed to apply changes: %s", err)
+	}
+
+	if maybeUpdated == nil {
+		t.Fatalf("returned value is nil")
+	}
+
+	updated, ok := maybeUpdated.(*TestEmbedded)
+	if !ok {
+		t.Fatalf("couldn't cast returned value to TestEmbedded")
+	}
+
+	if updated.Age != 4 {
+		t.Fatalf("expected age to be 4, got %d", updated.Age)
+	}
+
+	if updated.Name != "Boris" {
+		t.Fatalf("expected name to be Boris, got %s", updated.Name)
+	}
+}
+
+func TestChangesetMap(t *testing.T) {
+	type TestChangeset struct {
+		Field string `json:"jsonField" db:"dbField"`
+	}
+
+	ext := New(&TestChangeset{})
+	jsonMap := map[string]interface{}{
+		"jsonField": "value",
+	}
+
+	sqlMap, err := ext.GetChangesetForTag(jsonMap, "json", "db")
+	if err != nil {
+		t.Fatalf("failed to create changeset map: %s", err)
+	}
+
+	val, ok := sqlMap["dbField"]
+	if !ok {
+		t.Fatalf("[dbField] field not found in output map")
+	}
+
+	if val != "value" {
+		t.Fatalf("expected dbField to have 'value'")
+	}
+}
+
+func TestPartialUpdateNullability(t *testing.T) {
+	type TestChangeset struct {
+		Field *string `json:"jsonField" db:"dbField"`
+	}
+
+	ext := New(&TestChangeset{})
+	jsonMap := map[string]interface{}{
+		"jsonField": nil,
+	}
+
+	sqlMap, err := ext.GetChangesetForTag(jsonMap, "json", "db")
+	if err != nil {
+		t.Fatalf("failed to create changeset map: %s", err)
+	}
+
+	val, ok := sqlMap["dbField"]
+	if !ok {
+		t.Fatalf("[dbField] field not found in output map")
+	}
+
+	if val != nil {
+		t.Fatalf("expected dbField to be nil")
+	}
+
+}
+
+func TestPartialUpdateWithNull(t *testing.T) {
+
+	type TestPartialUpgradeWithNull struct {
+		Name  string `json:"name"`
+		Age   *int   `json:"age"`
+		Score int    `json:"score"`
+	}
+	age := 3
+	existing := TestPartialUpgradeWithNull{
+		"Alistair", &age, 13,
+	}
+
+	update := map[string]interface{}{
+		"age":             nil,
+		"unrelated_value": "some value",
+		"name":            "Boris",
+	}
+
+	ext := New(&existing).IgnoreField("Name")
+
+	maybeUpdated, err := ext.ApplyJSONMap(update)
+	if err != nil {
+		t.Fatalf("failed to apply changes: %s", err)
+	}
+
+	updated, ok := maybeUpdated.(*TestPartialUpgradeWithNull)
+	if !ok {
+		t.Fatalf("couldn't cast returned value to 'test'")
+	}
+
+	if updated.Age != nil {
+		t.Fatalf("expected age to be nil, got %v", updated.Age)
+	}
+
+	if updated.Name != "Alistair" {
+		t.Fatalf("expected name to be Alistair, got %s", updated.Name)
+	}
+}
