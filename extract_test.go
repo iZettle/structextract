@@ -489,7 +489,7 @@ func TestPartialUpdate(t *testing.T) {
 
 	ext := New(&existing).IgnoreField("Name")
 
-	maybeUpdated, err := ext.ApplyMap(update, "json")
+	maybeUpdated, err := ext.ApplyJSONMap(update)
 	if err != nil {
 		t.Fatalf("failed to apply changes: %s", err)
 	}
@@ -508,42 +508,10 @@ func TestPartialUpdate(t *testing.T) {
 	}
 }
 
-func TestPartialUpdateWihtoutTag(t *testing.T) {
-
-	existing := TestPartialUpgrade{
-		"Alistair", 3, 13,
-	}
-
-	update := map[string]interface{}{
-		"Age":            4,
-		"Name":           "Boris",
-		"UnrelatedField": "some value",
-	}
-
-	ext := New(&existing).IgnoreField("Name")
-
-	maybeUpdated, err := ext.ApplyMap(update, "")
-	if err != nil {
-		t.Fatalf("failed to apply changes: %s", err)
-	}
-
-	updated, ok := maybeUpdated.(*TestPartialUpgrade)
-	if !ok {
-		t.Fatalf("couldn't cast returned value to 'TestPartialUpgrade', value - [%v]", maybeUpdated)
-	}
-
-	if updated.Age != 4 {
-		t.Fatalf("expected age to be 4, got %d", updated.Age)
-	}
-
-	if updated.Name != "Alistair" {
-		t.Fatalf("expected name to be Alistair, got %s", updated.Name)
-	}
-}
-
 type TestEmbedded struct {
 	TestPartialUpgrade
-	ID string `json:"id"`
+	ID           string `json:"id"`
+	NonJSONField string
 }
 
 func TestEmbeddedPartialUpdate(t *testing.T) {
@@ -552,17 +520,18 @@ func TestEmbeddedPartialUpdate(t *testing.T) {
 			"Alistair", 3, 13,
 		},
 		"some id",
+		"non-json field",
 	}
 
 	update := map[string]interface{}{
-		"Age":            4,
-		"Name":           "Boris",
+		"age":            4,
+		"name":           "Boris",
 		"UnrelatedField": "some value",
 	}
 
 	ext := New(&existing).UseEmbeddedStructs(true)
 
-	maybeUpdated, err := ext.ApplyMap(update, "")
+	maybeUpdated, err := ext.ApplyJSONMap(update)
 	if err != nil {
 		t.Fatalf("failed to apply changes: %s", err)
 	}
@@ -656,7 +625,7 @@ func TestPartialUpdateWithNull(t *testing.T) {
 
 	ext := New(&existing).IgnoreField("Name")
 
-	maybeUpdated, err := ext.ApplyMap(update, "json")
+	maybeUpdated, err := ext.ApplyJSONMap(update)
 	if err != nil {
 		t.Fatalf("failed to apply changes: %s", err)
 	}
