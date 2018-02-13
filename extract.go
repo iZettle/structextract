@@ -8,16 +8,18 @@ import (
 
 // Extractor holds the struct that we want to extract data from
 type Extractor struct {
-	StructAddr    interface{} // StructAddr: struct address
-	ignoredFields []string    // ignoredFields: an array with all the fields to be ignored
+	StructAddr         interface{} // StructAddr: struct address
+	ignoredFields      []string    // ignoredFields: an array with all the fields to be ignored
+	useEmbeddedStructs bool
 }
 
 // New returns a new Extractor struct
 // the parameter have to be a pointer to a struct
 func New(s interface{}) *Extractor {
 	return &Extractor{
-		StructAddr:    s,
-		ignoredFields: nil,
+		StructAddr:         s,
+		ignoredFields:      nil,
+		useEmbeddedStructs: false,
 	}
 }
 
@@ -29,11 +31,9 @@ func (e *Extractor) Names() (out []string, err error) {
 	}
 
 	s := reflect.ValueOf(e.StructAddr).Elem()
-	for i := 0; i < s.NumField(); i++ {
-		if isIgnored(s.Type().Field(i).Name, e.ignoredFields) {
-			continue
-		}
-		out = append(out, s.Type().Field(i).Name)
+	fields := e.fields(s)
+	for _, field := range fields {
+		out = append(out, field.name)
 	}
 
 	return
@@ -47,12 +47,10 @@ func (e *Extractor) NamesFromTag(tag string) (out []string, err error) {
 	}
 
 	s := reflect.ValueOf(e.StructAddr).Elem()
+	fields := e.fields(s)
 
-	for i := 0; i < s.NumField(); i++ {
-		if isIgnored(s.Type().Field(i).Name, e.ignoredFields) {
-			continue
-		}
-		if val, ok := s.Type().Field(i).Tag.Lookup(tag); ok {
+	for _, field := range fields {
+		if val, ok := field.tags.Lookup(tag); ok {
 			out = append(out, val)
 		}
 	}
@@ -68,12 +66,10 @@ func (e *Extractor) NamesFromTagWithPrefix(tag string, prefix string) (out []str
 	}
 
 	s := reflect.ValueOf(e.StructAddr).Elem()
+	fields := e.fields(s)
 
-	for i := 0; i < s.NumField(); i++ {
-		if isIgnored(s.Type().Field(i).Name, e.ignoredFields) {
-			continue
-		}
-		val, ok := s.Type().Field(i).Tag.Lookup(tag)
+	for _, field := range fields {
+		val, ok := field.tags.Lookup(tag)
 		if !ok {
 			continue
 		}
@@ -91,11 +87,10 @@ func (e *Extractor) Values() (out []interface{}, err error) {
 	}
 
 	s := reflect.ValueOf(e.StructAddr).Elem()
-	for i := 0; i < s.NumField(); i++ {
-		if isIgnored(s.Type().Field(i).Name, e.ignoredFields) {
-			continue
-		}
-		out = append(out, s.Field(i).Interface())
+	fields := e.fields(s)
+
+	for _, field := range fields {
+		out = append(out, field.value.Interface())
 
 	}
 
@@ -110,12 +105,11 @@ func (e *Extractor) ValuesFromTag(tag string) (out []interface{}, err error) {
 	}
 
 	s := reflect.ValueOf(e.StructAddr).Elem()
-	for i := 0; i < s.NumField(); i++ {
-		if isIgnored(s.Type().Field(i).Name, e.ignoredFields) {
-			continue
-		}
-		if _, ok := s.Type().Field(i).Tag.Lookup(tag); ok {
-			out = append(out, s.Field(i).Interface())
+	fields := e.fields(s)
+
+	for _, field := range fields {
+		if _, ok := field.tags.Lookup(tag); ok {
+			out = append(out, field.value.Interface())
 		}
 
 	}
@@ -134,11 +128,10 @@ func (e *Extractor) FieldValueMap() (out map[string]interface{}, err error) {
 
 	out = make(map[string]interface{})
 	s := reflect.ValueOf(e.StructAddr).Elem()
-	for i := 0; i < s.NumField(); i++ {
-		if isIgnored(s.Type().Field(i).Name, e.ignoredFields) {
-			continue
-		}
-		out[s.Type().Field(i).Name] = s.Field(i).Interface()
+	fields := e.fields(s)
+
+	for _, field := range fields {
+		out[field.name] = field.value.Interface()
 	}
 
 	return
@@ -155,13 +148,11 @@ func (e *Extractor) FieldValueFromTagMap(tag string) (out map[string]interface{}
 
 	out = make(map[string]interface{})
 	s := reflect.ValueOf(e.StructAddr).Elem()
-	for i := 0; i < s.NumField(); i++ {
-		if isIgnored(s.Type().Field(i).Name, e.ignoredFields) {
-			continue
-		}
+	fields := e.fields(s)
 
-		if val, ok := s.Type().Field(i).Tag.Lookup(tag); ok {
-			out[val] = s.Field(i).Interface()
+	for _, field := range fields {
+		if val, ok := field.tags.Lookup(tag); ok {
+			out[val] = field.value.Interface()
 		}
 
 	}
@@ -180,13 +171,11 @@ func (e *Extractor) TagMapping(from, to string) (out map[string]string, err erro
 
 	out = make(map[string]string)
 	s := reflect.ValueOf(e.StructAddr).Elem()
-	for i := 0; i < s.NumField(); i++ {
-		if isIgnored(s.Type().Field(i).Name, e.ignoredFields) {
-			continue
-		}
+	fields := e.fields(s)
 
-		fromTag, fromOk := s.Type().Field(i).Tag.Lookup(from)
-		toTag, toOk := s.Type().Field(i).Tag.Lookup(to)
+	for _, field := range fields {
+		fromTag, fromOk := field.tags.Lookup(from)
+		toTag, toOk := field.tags.Lookup(to)
 		if toOk && fromOk {
 			out[fromTag] = toTag
 		}
@@ -212,12 +201,19 @@ func (e *Extractor) IgnoreField(fd ...string) *Extractor {
 	return e
 }
 
+// UseEmbeddedStructs toggles the usage of embedded structs
+func (e *Extractor) UseEmbeddedStructs(use bool) *Extractor {
+	e.useEmbeddedStructs = use
+	return e
+}
+
 func (e *Extractor) isFieldNameValid(fn string) bool {
 
 	s := reflect.ValueOf(e.StructAddr).Elem()
+	fields := e.fields(s)
 
-	for i := 0; i < s.NumField(); i++ {
-		if s.Type().Field(i).Name == fn {
+	for _, field := range fields {
+		if field.name == fn {
 			return true
 		}
 	}
@@ -246,4 +242,36 @@ func (e *Extractor) isValidStruct() error {
 	}
 
 	return nil
+}
+
+type field struct {
+	value reflect.Value
+	name  string
+	tags  reflect.StructTag
+}
+
+// This function returns a slice of fields of a struct
+// as reflect.Value, even fields of embedded structs
+func (e *Extractor) fields(s reflect.Value) []field {
+	fields := make([]field, 0, s.NumField())
+
+	for i := 0; i < s.NumField(); i++ {
+		if isIgnored(s.Type().Field(i).Name, e.ignoredFields) {
+			continue
+		}
+
+		if s.Type().Field(i).Anonymous {
+			if e.useEmbeddedStructs {
+				fields = append(fields, e.fields(s.Field(i))...)
+			}
+			continue
+		}
+
+		tag := s.Type().Field(i).Tag
+		name := s.Type().Field(i).Name
+		value := s.Field(i)
+		fields = append(fields, field{value, name, tag})
+	}
+
+	return fields
 }

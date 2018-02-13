@@ -136,3 +136,26 @@ A sample example that we use the structextract with [Squirrel](https://github.co
 	//Make the sql request..	
 ```
 
+#### Now with support for embedded structs
+```go
+  type SampleInner struct {
+    Inner string `json:"inner"`
+  }
+
+  type SampleOuter struct {
+    SampleInner
+    Field string `json:"field"`
+  }
+
+  ss := SampleOuter{SampleInner{"inner"}, "outer"}
+
+  ext := structextract.New(&ss).UseEmbeddedStructs(true)
+
+  jsonMap, err := ext.FieldValueFromTagMap("json")
+  // jsonMap here would be equal to the following map
+  m := map[string]interface{}{
+    "field": "outer",
+    "inner": "inner",
+  }
+```
+
