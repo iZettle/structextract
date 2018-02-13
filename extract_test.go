@@ -433,3 +433,38 @@ func TestTagMapping_invalidStruct(t *testing.T) {
 		t.Fatal("Passed value is not a valid struct")
 	}
 }
+
+func TestEmbeddedStructs_togglingBehaviour(t *testing.T) {
+	type Embed struct {
+		AnotherField string
+	}
+	type Outer struct {
+		Embed
+		Field string
+	}
+
+	ts := Outer{Embed{"another"}, "some"}
+
+	ext := New(&ts)
+	v, err := ext.Values()
+	if err != nil {
+		t.Fatal("failed to get values when not using embedded structs")
+	}
+
+	if len(v) != 1 {
+		t.Fatalf("expected a single value, got %d", len(v))
+	}
+
+	if !reflect.DeepEqual(v[0], "some") {
+		t.Fatalf("expected the single value to be 'some', got %v", v[0])
+	}
+
+	v, err = ext.UseEmbeddedStructs(true).Values()
+	if err != nil {
+		t.Fatalf("failed to get values when using embedded structs: %s", err)
+	}
+
+	if len(v) != 2 {
+		t.Fatalf("expected to get 2 values when using embedded struct")
+	}
+}
