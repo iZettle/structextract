@@ -1,19 +1,18 @@
 language: go
 
 go:
- - 1.8
+ - "1.11.x"
 
 before_install:
-  - go get github.com/golang/lint/golint
+  - go get -u github.com/alecthomas/gometalinter
   - go get github.com/mattn/goveralls
 
 install:
-  - go get -t -v ./...
+  - gometalinter --install
 
 script:
-  - go test -v -covermode=count -coverprofile=coverage.out
-  - go vet -v ./...
-  - golint -set_exit_status $(glide novendor)
+ - gometalinter --fast --vendor ./...
+ - go test ./... -coverprofile cover.out -covermode count -coverpkg ./...
   
 after_script:
-  - goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $COVERALLS_TOKEN
+  - goveralls -v -coverprofile cover.out -service=travis-ci -repotoken $COVERALLS_TOKEN
