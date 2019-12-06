@@ -468,3 +468,257 @@ func TestEmbeddedStructs_togglingBehaviour(t *testing.T) {
 		t.Fatalf("expected to get 2 values when using embedded struct")
 	}
 }
+
+type basicTypes struct {
+	BoolType           bool     `custom:"boolType" custom_two:"boolTypeTwo,omitempty"`
+	StringType         string   `custom:"stringType,omitempty"`
+	IntType            int      `custom:"intType,omitempty"`
+	ByteType           []byte   `custom:"byteType,omitempty"`
+	Float64Type        float64  `custom:"float64Type,omitempty"`
+	BoolTypePtr        *bool    `custom:"boolTypePtr,omitempty"`
+	StringTypePtr      *string  `custom:"stringTypePtr,omitempty"`
+	IntTypePtr         *int     `custom:"intTypePtr,omitempty"`
+	Float64TypePtr     *float64 `custom:"float64TypePtr,omitempty"`
+	FieldWithNoOmitTag string   `custom:"fieldWithNoOmitTag"`
+}
+
+func TestExtractor_FieldValueFromTagMapOmitempty(t *testing.T) {
+	testBool := false
+	testStr := "test"
+	testInt := 6
+	testFloat64 := 1.2
+
+	tests := []struct {
+		name     string
+		structIn basicTypes
+		expected map[string]interface{}
+	}{
+		{
+			name:     "all fields empty, expect not omitted fields: boolType and fieldWithNoOmitTag",
+			structIn: basicTypes{},
+			expected: map[string]interface{}{
+				"boolType":           false,
+				"fieldWithNoOmitTag": "",
+			},
+		},
+		{
+			name: "all fields initialised, expect all fields back",
+			structIn: basicTypes{
+				BoolType:           true,
+				StringType:         testStr,
+				IntType:            1,
+				ByteType:           []byte("test"),
+				Float64Type:        1.2,
+				BoolTypePtr:        &testBool,
+				StringTypePtr:      &testStr,
+				IntTypePtr:         &testInt,
+				Float64TypePtr:     &testFloat64,
+				FieldWithNoOmitTag: testStr,
+			},
+			expected: map[string]interface{}{
+				"boolType":           true,
+				"stringType":         testStr,
+				"intType":            1,
+				"byteType":           []byte("test"),
+				"float64Type":        1.2,
+				"boolTypePtr":        &testBool,
+				"stringTypePtr":      &testStr,
+				"intTypePtr":         &testInt,
+				"float64TypePtr":     &testFloat64,
+				"fieldWithNoOmitTag": testStr,
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			result, err := New(&test.structIn).FieldValueFromTagMap("custom")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !reflect.DeepEqual(test.expected, result) {
+				t.Fatalf("want %v, got %v", test.expected, result)
+			}
+		})
+	}
+}
+
+func TestExtractor_NamesFromTagOmitempty(t *testing.T) {
+	testBool := false
+	testStr := "test"
+	testInt := 6
+	testFloat64 := 1.2
+
+	tests := []struct {
+		name     string
+		structIn basicTypes
+		expected []string
+	}{
+		{
+			name:     "all fields empty, expect not omitted fields: boolType and fieldWithNoOmitTag",
+			structIn: basicTypes{},
+			expected: []string{
+				"boolType",
+				"fieldWithNoOmitTag",
+			},
+		},
+		{
+			name: "all fields initialised, expect all fields back",
+			structIn: basicTypes{
+				BoolType:           true,
+				StringType:         testStr,
+				IntType:            1,
+				ByteType:           []byte("test"),
+				Float64Type:        1.2,
+				BoolTypePtr:        &testBool,
+				StringTypePtr:      &testStr,
+				IntTypePtr:         &testInt,
+				Float64TypePtr:     &testFloat64,
+				FieldWithNoOmitTag: testStr,
+			},
+			expected: []string{
+				"boolType",
+				"stringType",
+				"intType",
+				"byteType",
+				"float64Type",
+				"boolTypePtr",
+				"stringTypePtr",
+				"intTypePtr",
+				"float64TypePtr",
+				"fieldWithNoOmitTag",
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			result, err := New(&test.structIn).NamesFromTag("custom")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !reflect.DeepEqual(test.expected, result) {
+				t.Fatalf("want %v, got %v", test.expected, result)
+			}
+		})
+	}
+}
+
+func TestExtractor_NamesFromTagWithPrefixOmitempty(t *testing.T) {
+	testBool := false
+	testStr := "test"
+	testInt := 6
+	testFloat64 := 1.2
+
+	tests := []struct {
+		name     string
+		structIn basicTypes
+		expected []string
+	}{
+		{
+			name:     "all fields empty, expect not omitted fields: boolType and fieldWithNoOmitTag",
+			structIn: basicTypes{},
+			expected: []string{
+				"test_boolType",
+				"test_fieldWithNoOmitTag",
+			},
+		},
+		{
+			name: "all fields initialised, expect all fields back",
+			structIn: basicTypes{
+				BoolType:           true,
+				StringType:         testStr,
+				IntType:            1,
+				ByteType:           []byte("test"),
+				Float64Type:        1.2,
+				BoolTypePtr:        &testBool,
+				StringTypePtr:      &testStr,
+				IntTypePtr:         &testInt,
+				Float64TypePtr:     &testFloat64,
+				FieldWithNoOmitTag: testStr,
+			},
+			expected: []string{
+				"test_boolType",
+				"test_stringType",
+				"test_intType",
+				"test_byteType",
+				"test_float64Type",
+				"test_boolTypePtr",
+				"test_stringTypePtr",
+				"test_intTypePtr",
+				"test_float64TypePtr",
+				"test_fieldWithNoOmitTag",
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			result, err := New(&test.structIn).NamesFromTagWithPrefix("custom", "test_")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !reflect.DeepEqual(test.expected, result) {
+				t.Fatalf("want %v, got %v", test.expected, result)
+			}
+		})
+	}
+}
+
+func TestExtractor_ValuesFromTagOmitempty(t *testing.T) {
+	testBool := false
+	testStr := "test"
+	testInt := 6
+	testFloat64 := 1.2
+
+	tests := []struct {
+		name     string
+		structIn basicTypes
+		expected []interface{}
+	}{
+		{
+			name:     "all fields empty, expect not omitted fields: boolType and fieldWithNoOmitTag",
+			structIn: basicTypes{},
+			expected: []interface{}{
+				false,
+				"",
+			},
+		},
+		{
+			name: "all fields initialised, expect all fields back",
+			structIn: basicTypes{
+				BoolType:           true,
+				StringType:         testStr,
+				IntType:            1,
+				ByteType:           []byte("test"),
+				Float64Type:        1.2,
+				BoolTypePtr:        &testBool,
+				StringTypePtr:      &testStr,
+				IntTypePtr:         &testInt,
+				Float64TypePtr:     &testFloat64,
+				FieldWithNoOmitTag: testStr,
+			},
+			expected: []interface{}{
+				true,
+				testStr,
+				1,
+				[]byte("test"),
+				1.2,
+				&testBool,
+				&testStr,
+				&testInt,
+				&testFloat64,
+				testStr,
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			result, err := New(&test.structIn).ValuesFromTag("custom")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !reflect.DeepEqual(test.expected, result) {
+				t.Fatalf("want %v, got %v", test.expected, result)
+			}
+		})
+	}
+}
+
