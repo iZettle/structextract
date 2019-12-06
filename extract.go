@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+const omitEmptyOption = "omitempty"
+
 // Extractor holds the struct that we want to extract data from
 type Extractor struct {
 	StructAddr         interface{} // StructAddr: struct address
@@ -23,7 +25,7 @@ func New(s interface{}) *Extractor {
 	}
 }
 
-//Names returns an array with all the field names (with the same order) as defined on the struct
+// Names returns an array with all the field names (with the same order) as defined on the struct
 func (e *Extractor) Names() (out []string, err error) {
 
 	if err := e.isValidStruct(); err != nil {
@@ -39,7 +41,8 @@ func (e *Extractor) Names() (out []string, err error) {
 	return
 }
 
-//NamesFromTag returns an array with all the tag names for each field
+// NamesFromTag returns an array with all the tag names for each field
+// omitempty tag option will ignore empty fields
 func (e *Extractor) NamesFromTag(tag string) (out []string, err error) {
 
 	if err := e.isValidStruct(); err != nil {
@@ -51,14 +54,19 @@ func (e *Extractor) NamesFromTag(tag string) (out []string, err error) {
 
 	for _, field := range fields {
 		if val, ok := field.tags.Lookup(tag); ok {
-			out = append(out, val)
+			key, omit := e.parseOmitempty(val, field.value)
+			if omit {
+				continue
+			}
+			out = append(out, key)
 		}
 	}
 
 	return
 }
 
-//NamesFromTagWithPrefix returns an array with all the tag names for each field including the given prefix
+// NamesFromTagWithPrefix returns an array with all the tag names for each field including the given prefix
+// omitempty tag option will ignore empty fields
 func (e *Extractor) NamesFromTagWithPrefix(tag string, prefix string) (out []string, err error) {
 
 	if err := e.isValidStruct(); err != nil {
@@ -73,13 +81,17 @@ func (e *Extractor) NamesFromTagWithPrefix(tag string, prefix string) (out []str
 		if !ok {
 			continue
 		}
-		out = append(out, strings.TrimSpace(prefix+val))
+		key, omit := e.parseOmitempty(val, field.value)
+		if omit {
+			continue
+		}
+		out = append(out, strings.TrimSpace(prefix+key))
 	}
 
 	return
 }
 
-//Values returns an interface array with all the values
+// Values returns an interface array with all the values
 func (e *Extractor) Values() (out []interface{}, err error) {
 
 	if err := e.isValidStruct(); err != nil {
@@ -97,7 +109,8 @@ func (e *Extractor) Values() (out []interface{}, err error) {
 	return
 }
 
-//ValuesFromTag returns an interface array with all the values of fields with the given tag
+// ValuesFromTag returns an interface array with all the values of fields with the given tag
+// omitempty tag option will ignore empty fields
 func (e *Extractor) ValuesFromTag(tag string) (out []interface{}, err error) {
 
 	if err := e.isValidStruct(); err != nil {
@@ -108,10 +121,12 @@ func (e *Extractor) ValuesFromTag(tag string) (out []interface{}, err error) {
 	fields := e.fields(s)
 
 	for _, field := range fields {
-		if _, ok := field.tags.Lookup(tag); ok {
+		if val, ok := field.tags.Lookup(tag); ok {
+			if _, omit := e.parseOmitempty(val, field.value); omit {
+				continue
+			}
 			out = append(out, field.value.Interface())
 		}
-
 	}
 
 	return
@@ -140,6 +155,7 @@ func (e *Extractor) FieldValueMap() (out map[string]interface{}, err error) {
 // FieldValueFromTagMap returns a string to interface map that uses as key the tag name,
 // key: tag name for the given field
 // value: the value of the field
+// omitempty tag option will ignore empty fields
 func (e *Extractor) FieldValueFromTagMap(tag string) (out map[string]interface{}, err error) {
 
 	if err := e.isValidStruct(); err != nil {
@@ -152,7 +168,11 @@ func (e *Extractor) FieldValueFromTagMap(tag string) (out map[string]interface{}
 
 	for _, field := range fields {
 		if val, ok := field.tags.Lookup(tag); ok {
-			out[val] = field.value.Interface()
+			key, omit := e.parseOmitempty(val, field.value)
+			if omit {
+				continue
+			}
+			out[key] = field.value.Interface()
 		}
 
 	}
@@ -274,4 +294,30 @@ func (e *Extractor) fields(s reflect.Value) []field {
 	}
 
 	return fields
+}
+
+func (e *Extractor) parseOptions(tag string) (string, tagOptions) {
+	res := strings.Split(tag, ",")
+	return res[0], res[1:]
+}
+
+func (e *Extractor) parseOmitempty(tag string, val reflect.Value) (string, bool) {
+	tagValue, options := e.parseOptions(tag)
+	if !options.has(omitEmptyOption) {
+		return tagValue, false
+	}
+	zero := reflect.Zero(val.Type()).Interface()
+	current := val.Interface()
+	return tagValue, reflect.DeepEqual(current, zero)
+}
+
+type tagOptions []string
+
+func (t tagOptions) has(opt string) bool {
+	for _, option := range t {
+		if option == opt {
+			return true
+		}
+	}
+	return false
 }

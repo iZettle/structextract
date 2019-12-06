@@ -1,15 +1,15 @@
-[![Coverage Status](https://coveralls.io/repos/github/intelligentpos/structextract/badge.svg?branch=master&t=461ETo)](https://coveralls.io/github/intelligentpos/structextract?branch=master)
-[![Go Report Card](https://goreportcard.com/badge/github.com/intelligentpos/structextract)](https://goreportcard.com/report/github.com/intelligentpos/structextract)
-[![GoDoc](https://godoc.org/github.com/intelligentpos/structextract?status.svg)](https://godoc.org/github.com/intelligentpos/structextract)
+[![Coverage Status](https://coveralls.io/repos/github/iZettle/structextract/badge.svg?branch=master)](https://coveralls.io/github/iZettle/structextract?branch=master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/iZettle/structextract)](https://goreportcard.com/report/github.com/iZettle/structextract)
+[![GoDoc](https://godoc.org/github.com/iZettle/structextract?status.svg)](https://godoc.org/github.com/iZettle/structextract)
 
 # structextract
 A very small package that extracts a given struct to an array or to a map.
 There is option to ignore fields or to use the tag names as key on the struct.
-
+You can also add `omitempty` tag option that will ignore empty fields.
 ## Install
 
 ```bash
-go get github.com/intelligentpos/structextract
+go get github.com/iZettle/structextract
 ```
 
 ## Examples 
@@ -159,3 +159,20 @@ A sample example that we use the structextract with [Squirrel](https://github.co
   }
 ```
 
+#### Omit Empty Fields
+```go
+    type SampleStruct struct {
+		Field1 string `exampleTag:"field1" anotherExampleTag:"field1,omitempty"`
+		Field2 *int   `exampleTag:"field2,omitempty" anotherExampleTag:"field_2"`
+	}
+	// struct with empty values
+        ss := SampleStruct{}
+        result, _ := New(&ss).
+		FieldValueFromTagMap("exampleTag")
+	
+        // only fields which tag `exampleTag` and omitempty have been ignored
+        // result: map[string]interface{}{
+        //    "field1": "",
+        //  }
+	
+```
